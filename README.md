@@ -4,7 +4,7 @@
 [![GitHub Release](https://img.shields.io/github/release/JOHLC/HA-Navigation-Card.svg)](https://github.com/JOHLC/HA-Navigation-Card/releases)
 [![License](https://img.shields.io/github/license/JOHLC/HA-Navigation-Card.svg)](LICENSE)
 
-A beautiful, customizable navigation card for Home Assistant that creates an elegant launcher/dock interface for your Lovelace dashboard. Perfect for quick access to frequently used pages, add-ons, and settings.
+A customizable navigation card for Home Assistant that creates a launcher/dock interface for your Lovelace dashboard. Perfect for quick access to frequently used pages, add-ons, and settings.
 
 ![Navigation Card Example](https://github.com/user-attachments/assets/0a237473-397b-44ed-8d18-2546420f05c0)
 
@@ -190,24 +190,6 @@ image: /local/my-icon.png
 - **Internal navigation** (starts with `/`): Uses Home Assistant's router, no page reload
 - **External links** (starts with `http`): Opens in new context
 
-## 🎨 Styling with Card-Mod
-
-You can further customize the card using [card-mod](https://github.com/thomasloven/lovelace-card-mod):
-
-```yaml
-type: custom:ha-navigation-card
-sections:
-  - title: Links
-    items:
-      - label: Home
-        icon: mdi:home
-        url: /lovelace/0
-card_mod:
-  style: |
-    ha-card {
-      border-radius: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
 ```
 
 ## 🔧 Troubleshooting
@@ -239,8 +221,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 MIT License - see [LICENSE](LICENSE) file for details
 
-## ⭐ Credits
-
-Created by [Joel](https://github.com/JOHLC)
-
-If you like this card, please star the repository!
