@@ -822,6 +822,11 @@ class HaNavigationCard extends LitElementBase {
         .dock-item .label {
           font-size: 0.85rem;
         }
+        .dock-item-settings ha-icon {
+          --mdc-icon-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
       }
       @media (max-width: 400px) {
         .dock-item {
@@ -829,9 +834,9 @@ class HaNavigationCard extends LitElementBase {
           padding: 6px;
         }
         .dock-item-settings ha-icon {
-          --mdc-icon-size: 18px;
-          width: 18px;
-          height: 18px;
+          --mdc-icon-size: 16px;
+          width: 16px;
+          height: 16px;
         }
       }
     `;
