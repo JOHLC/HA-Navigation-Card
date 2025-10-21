@@ -692,9 +692,15 @@ class HaNavigationCard extends LitElementBase {
         font-weight: 600;
         cursor: pointer;
       }
-      .dock-item:hover {
+      .dock-item:hover,
+      .dock-item:focus {
         transform: translateY(-4px);
         background: var(--nav-item-bg-color-hover);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+      }
+      .dock-item:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
       }
       .dock-item img {
         width: 48px;
@@ -735,23 +741,54 @@ class HaNavigationCard extends LitElementBase {
         transition: background 0.15s;
         color: var(--nav-settings-icon-color);
         text-decoration: none;
+        cursor: pointer;
       }
-      .dock-item-settings:hover {
+      .dock-item-settings:hover,
+      .dock-item-settings:focus {
         background: rgba(0,0,0,0.2);
+        outline: none;
+      }
+      .dock-item-settings:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
       }
       .dock-item-settings ha-icon {
-  --mdc-icon-size: var(--nav-settings-icon-size, 24px);
-  width: var(--nav-settings-icon-size, 24px);
-  height: var(--nav-settings-icon-size, 24px);
+        --mdc-icon-size: var(--nav-settings-icon-size, 24px);
+        width: var(--nav-settings-icon-size, 24px);
+        height: var(--nav-settings-icon-size, 24px);
         display: block;
         background: none;
         border-radius: 0;
         margin-bottom: 0;
       }
-      @media (max-width: 480px) {
+      @media (max-width: 600px) {
         .dock-item {
-          min-width: 88px;
+          min-width: 100px;
+          padding: 6px 8px;
+        }
+        .dock-item ha-icon,
+        .dock-item img {
+          width: 40px;
+          height: 40px;
+          --mdc-icon-size: 40px;
+        }
+        .dock-item .label {
+          font-size: 0.85rem;
+        }
+      }
+      @media (max-width: 400px) {
+        .dock-item {
+          min-width: 80px;
           padding: 6px;
+        }
+        .dock-item ha-icon,
+        .dock-item img {
+          width: 36px;
+          height: 36px;
+          --mdc-icon-size: 36px;
+        }
+        .dock-item .label {
+          font-size: 0.8rem;
         }
       }
     `;
