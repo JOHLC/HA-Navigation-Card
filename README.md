@@ -6,7 +6,7 @@
 
 A beautiful, customizable navigation card for Home Assistant that creates an elegant launcher/dock interface for your Lovelace dashboard. Perfect for quick access to frequently used pages, add-ons, and settings.
 
-![Navigation Card Example](https://via.placeholder.com/800x400?text=Navigation+Card+Screenshot)
+![Navigation Card Example](https://github.com/user-attachments/assets/0a237473-397b-44ed-8d18-2546420f05c0)
 
 ## ✨ Features
 
