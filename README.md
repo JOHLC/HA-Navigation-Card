@@ -190,8 +190,6 @@ image: /local/my-icon.png
 - **Internal navigation** (starts with `/`): Uses Home Assistant's router, no page reload
 - **External links** (starts with `http`): Opens in new context
 
-```
-
 ## 🔧 Troubleshooting
 
 ### Card not showing up
