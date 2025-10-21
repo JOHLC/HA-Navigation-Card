@@ -229,35 +229,47 @@ class HaNavigationCardEditor extends LitElementBase {
           Configure navigation sections and items for your Home Assistant dashboard. Each section can have a name and multiple navigation items. Use the advanced options to customize colors.
         </div>
         <div class="section-bar">
+          <div class="sections-header">
+            <h3 style="margin:0 0 8px 0;">Sections (${(this._config.sections || []).length})</h3>
+            <mwc-button outlined @click="${this._addSection}" class="add-section" title="Add a new section">
+              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+              Add Section
+            </mwc-button>
+          </div>
           <div class="sections-list" role="tablist" aria-label="Sections">
             ${(this._config.sections || []).map((s,i)=> html`
-              <mwc-button
-                class="section-tab ${i===this._activeSection? 'active':''}"
-                @click="${()=>this._selectSection(i)}"
-                role="tab"
-                aria-selected="${i===this._activeSection}"
-                title="Edit section: ${s.title || 'Section '+(i+1)}"
-              >${s.title || 'Section '+(i+1)}</mwc-button>
-              <mwc-icon-button
-                class="move-btn"
-                title="Move section left"
-                ?disabled="${i===0}"
-                @click="${()=>this._moveSection(i,-1)}"
-              ><ha-icon icon="mdi:chevron-left"></ha-icon></mwc-icon-button>
-              <mwc-icon-button
-                class="move-btn"
-                title="Move section right"
-                ?disabled="${i===(this._config.sections.length-1)}"
-                @click="${()=>this._moveSection(i,1)}"
-              ><ha-icon icon="mdi:chevron-right"></ha-icon></mwc-icon-button>
-              <mwc-icon-button
-                class="remove-section"
-                title="Remove this section"
-                ?disabled="${this._config.sections.length<=1}"
-                @click="${()=>this._removeSection(i)}"
-              ><ha-icon icon="mdi:close"></ha-icon></mwc-icon-button>
+              <div class="section-selector ${i===this._activeSection? 'active':''}">
+                <mwc-button
+                  class="section-tab"
+                  @click="${()=>this._selectSection(i)}"
+                  role="tab"
+                  aria-selected="${i===this._activeSection}"
+                  title="Edit section: ${s.title || 'Section '+(i+1)}"
+                >
+                  ${s.title || 'Section '+(i+1)}
+                </mwc-button>
+                <div class="section-controls">
+                  <mwc-icon-button
+                    class="move-btn"
+                    title="Move section left"
+                    ?disabled="${i===0}"
+                    @click="${()=>this._moveSection(i,-1)}"
+                  ><ha-icon icon="mdi:chevron-left"></ha-icon></mwc-icon-button>
+                  <mwc-icon-button
+                    class="move-btn"
+                    title="Move section right"
+                    ?disabled="${i===(this._config.sections.length-1)}"
+                    @click="${()=>this._moveSection(i,1)}"
+                  ><ha-icon icon="mdi:chevron-right"></ha-icon></mwc-icon-button>
+                  <mwc-icon-button
+                    class="remove-section"
+                    title="Remove this section"
+                    ?disabled="${this._config.sections.length<=1}"
+                    @click="${()=>this._removeSection(i)}"
+                  ><ha-icon icon="mdi:close"></ha-icon></mwc-icon-button>
+                </div>
+              </div>
             `)}
-            <mwc-button outlined @click="${this._addSection}" class="add-section" title="Add a new section">Add Section</mwc-button>
           </div>
         </div>
         <div class="section-outline">
@@ -427,8 +439,44 @@ class HaNavigationCardEditor extends LitElementBase {
           margin-top: 4px;
           margin-bottom: 4px;
         }
-  .sections-list { display: flex; flex-wrap: wrap; gap:4px; align-items: center; }
-  .section-tab.active { --mdc-theme-primary: var(--primary-color); font-weight:600; }
+  .sections-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .sections-list { 
+    display: flex; 
+    flex-direction: column;
+    gap: 8px;
+  }
+  .section-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: var(--card-background-color, transparent);
+  }
+  .section-selector.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color, #3f51b5)10;
+  }
+  .section-selector .section-tab {
+    flex: 1;
+    justify-content: flex-start;
+    --mdc-theme-primary: var(--primary-text-color);
+  }
+  .section-selector.active .section-tab {
+    --mdc-theme-primary: var(--primary-color);
+    font-weight: 600;
+  }
+  .section-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
   .colors-section { 
     border: 1px solid var(--divider-color); 
     border-radius: 8px; 
@@ -438,7 +486,6 @@ class HaNavigationCardEditor extends LitElementBase {
   }
   .colors-section h4 { margin-top: 0; margin-bottom: 12px; color: var(--primary-text-color); }
   .colors-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
-  .add-section { margin-left:4px; }
   .move-btn { --mdc-icon-size:20px; }
   .remove-section { --mdc-icon-size:20px; }
   .colors-toggle { margin-top:8px; margin-bottom:4px; }
@@ -517,7 +564,7 @@ class HaNavigationCard extends LitElementBase {
       --nav-icon-bg-color: ${colors.icon_bg_color};
       --nav-text-color: ${colors.text_color};
       --nav-settings-icon-color: ${colors.settings_icon_color};
-      --nav-settings-icon-size: ${colors.settings_icon_size};
+      --nav-settings-icon-size: ${colors.settings_icon_size || '24px'};
     `;
 
     return html`
