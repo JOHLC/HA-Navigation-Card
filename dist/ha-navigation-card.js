@@ -509,67 +509,66 @@ class HaNavigationCard extends LitElementBase {
       ...(this.config.colors || {}),
     };
 
-    const style = html`
-        <style>
-            :host {
-                --nav-title-bg-color: ${colors.title_bg_color};
-                --nav-item-bg-color: ${colors.item_bg_color};
-                --nav-item-bg-color-hover: ${colors.item_bg_color_hover};
-                --nav-icon-bg-color: ${colors.icon_bg_color};
-                --nav-text-color: ${colors.text_color};
-                --nav-settings-icon-color: ${colors.settings_icon_color};
-                /* size of the settings cog (can be overridden by theme or card-mod) */
-                --nav-settings-icon-size: ${colors.settings_icon_size || '24px'};
-            }
-        </style>
+    // Apply CSS variables via inline style for dynamic color support
+    const styleVars = `
+      --nav-title-bg-color: ${colors.title_bg_color};
+      --nav-item-bg-color: ${colors.item_bg_color};
+      --nav-item-bg-color-hover: ${colors.item_bg_color_hover};
+      --nav-icon-bg-color: ${colors.icon_bg_color};
+      --nav-text-color: ${colors.text_color};
+      --nav-settings-icon-color: ${colors.settings_icon_color};
+      --nav-settings-icon-size: ${colors.settings_icon_size};
     `;
 
     return html`
-      ${style}
-      <div class="dock-container" role="navigation" aria-label="Home shortcuts">
-        ${this.config.sections.map(section => html`
-          <div class="dock-section">
-            ${section.title ? html`<h3>${section.title}</h3>` : ""}
-            <div class="dock">
-              ${section.items.map((item) => {
-                const safe = this._sanitizeItem(item);
-                const icon = safe.image
-                  ? html`<img loading="lazy" src="${safe.image}" alt="${safe.label}" />`
-                  : html`<ha-icon icon="${safe.icon || 'mdi:link'}"></ha-icon>`;
-
-                const settings = safe.settings
-                  ? html`
-                      <span
-                        class="dock-item-settings"
-                        title="${safe.settings.label || 'Settings'}"
-                        role="button"
-                        tabindex="0"
-                        @click="${(e) => this._handleSettingsClick(e, safe.settings.url)}"
-                      >
-                        <ha-icon icon="${safe.settings.icon || 'mdi:cog-outline'}"></ha-icon>
-                      </span>
-                    `
-                  : '';
-
-                return html`
-                  <a
-                    class="dock-item"
-                    href="${safe.url}"
-                    title="${safe.label}"
-                    role="link"
-                    aria-label="${safe.label}"
-                    @click="${(e)=>this._onItemClick(e, safe.url)}"
-                  >
-                    ${icon}
-                    <span class="label">${safe.label}</span>
-                    ${settings}
-                  </a>
-                `;
-              })}
-            </div>
-          </div>
-        `)}
+      <div class="dock-container" role="navigation" aria-label="Home shortcuts" style="${styleVars}">
+        ${this.config.sections.map(section => this._renderSection(section))}
       </div>
+    `;
+  }
+
+  _renderSection(section) {
+    return html`
+      <div class="dock-section">
+        ${section.title ? html`<h3>${section.title}</h3>` : ""}
+        <div class="dock">
+          ${section.items.map(item => this._renderItem(item))}
+        </div>
+      </div>
+    `;
+  }
+
+  _renderItem(item) {
+    const safe = this._sanitizeItem(item);
+    const icon = safe.image
+      ? html`<img loading="lazy" src="${safe.image}" alt="${safe.label}" />`
+      : html`<ha-icon icon="${safe.icon || 'mdi:link'}"></ha-icon>`;
+
+    const settings = safe.settings ? html`
+      <span
+        class="dock-item-settings"
+        title="${safe.settings.label || 'Settings'}"
+        role="button"
+        tabindex="0"
+        @click="${(e) => this._handleSettingsClick(e, safe.settings.url)}"
+        @keydown="${(e) => e.key === 'Enter' && this._handleSettingsClick(e, safe.settings.url)}"
+      >
+        <ha-icon icon="${safe.settings.icon || 'mdi:cog-outline'}"></ha-icon>
+      </span>
+    ` : '';
+
+    return html`
+      <a
+        class="dock-item"
+        href="${safe.url}"
+        title="${safe.label}"
+        aria-label="${safe.label}"
+        @click="${(e) => this._onItemClick(e, safe.url)}"
+      >
+        ${icon}
+        <span class="label">${safe.label}</span>
+        ${settings}
+      </a>
     `;
   }
 
@@ -588,21 +587,30 @@ class HaNavigationCard extends LitElementBase {
   }
 
   _navigate(url) {
-    if (!url) return;
+    if (!url || url === '#') return;
+    
     try {
-      // Prefer HA's navigation helper if present
-      const nav = window?.history;
-      if (url.startsWith(window.location.origin)) {
-        url = url.replace(window.location.origin, '');
+      // Normalize URL - remove origin if present to get path
+      let targetUrl = url;
+      if (targetUrl.startsWith(window.location.origin)) {
+        targetUrl = targetUrl.substring(window.location.origin.length);
       }
-      if (nav && url.startsWith('/')) {
-        nav.pushState(null, '', url);
-        window.dispatchEvent(new Event('location-changed'));
+      
+      // Internal navigation for paths starting with /
+      if (targetUrl.startsWith('/')) {
+        window.history.pushState(null, '', targetUrl);
+        window.dispatchEvent(new Event('location-changed', {
+          bubbles: false,
+          cancelable: false,
+          composed: true
+        }));
       } else {
+        // External navigation
         window.location.assign(url);
       }
     } catch (err) {
       console.error('[ha-navigation-card] navigation error', err);
+      // Fallback to direct assignment
       window.location.href = url;
     }
   }
@@ -620,9 +628,20 @@ class HaNavigationCard extends LitElementBase {
   }
 
   getCardSize() {
-    // Rough estimate: number of sections * 2 (header + row) capped minimum 2
-    if (!this.config?.sections) return 2;
-    return Math.max(2, this.config.sections.length * 2);
+    if (!this.config?.sections || !Array.isArray(this.config.sections)) return 2;
+    
+    // Calculate size based on sections and items
+    // Each section with title takes ~2 units, items add to height based on wrapping
+    let size = 0;
+    this.config.sections.forEach(section => {
+      // Section header
+      size += section.title ? 1.5 : 0.5;
+      // Items (estimate 3 items per row, each row ~1.5 units)
+      const itemCount = section.items?.length || 0;
+      size += Math.ceil(itemCount / 3) * 1.5;
+    });
+    
+    return Math.max(2, Math.ceil(size));
   }
 
   static get styles() {
