@@ -1,7 +1,7 @@
 // Navigation Card (ha-navigation-card)
 // Lightweight customizable navigation / launcher card for Home Assistant Lovelace
 // https://github.com/JOHLC/HA-Navigation-Card
-const CARD_VERSION = '0.1.0';
+const CARD_VERSION = '0.1.1';
 
 // Attempt to obtain Home Assistant's internal LitElement base (so we use the same instance)
 // Fallback gracefully if HA elements not yet defined when this script is evaluated.
@@ -706,6 +706,11 @@ class HaNavigationCard extends LitElementBase {
         .dock-item {
           min-width: 88px;
           padding: 6px;
+        }
+        .dock-item-settings ha-icon {
+          --mdc-icon-size: 18px;
+          width: 18px;
+          height: 18px;
         }
       }
     `;
