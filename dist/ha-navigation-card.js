@@ -226,53 +226,11 @@ class HaNavigationCardEditor extends LitElementBase {
       <div class="card-config">
         <h2 style="margin-top:0;">Navigation Card Setup</h2>
         <div style="color:var(--secondary-text-color,#888);font-size:0.98em;margin-bottom:12px;">
-          Configure navigation sections and items for your Home Assistant dashboard. Each section can have a name and multiple navigation items. Use the advanced options to customize colors.
+          Configure navigation sections and items for your Home Assistant dashboard. Each section can have a name and multiple navigation items.
         </div>
-        <div class="section-bar">
-          <div class="sections-header">
-            <h3 style="margin:0 0 8px 0;">Sections (${(this._config.sections || []).length})</h3>
-            <mwc-button outlined @click="${this._addSection}" class="add-section" title="Add a new section">
-              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-              Add Section
-            </mwc-button>
-          </div>
-          <div class="sections-list" role="tablist" aria-label="Sections">
-            ${(this._config.sections || []).map((s,i)=> html`
-              <div class="section-selector ${i===this._activeSection? 'active':''}">
-                <mwc-button
-                  class="section-tab"
-                  @click="${()=>this._selectSection(i)}"
-                  role="tab"
-                  aria-selected="${i===this._activeSection}"
-                  title="Edit section: ${s.title || 'Section '+(i+1)}"
-                >
-                  ${s.title || 'Section '+(i+1)}
-                </mwc-button>
-                <div class="section-controls">
-                  <mwc-icon-button
-                    class="move-btn"
-                    title="Move section left"
-                    ?disabled="${i===0}"
-                    @click="${()=>this._moveSection(i,-1)}"
-                  ><ha-icon icon="mdi:chevron-left"></ha-icon></mwc-icon-button>
-                  <mwc-icon-button
-                    class="move-btn"
-                    title="Move section right"
-                    ?disabled="${i===(this._config.sections.length-1)}"
-                    @click="${()=>this._moveSection(i,1)}"
-                  ><ha-icon icon="mdi:chevron-right"></ha-icon></mwc-icon-button>
-                  <mwc-icon-button
-                    class="remove-section"
-                    title="Remove this section"
-                    ?disabled="${this._config.sections.length<=1}"
-                    @click="${()=>this._removeSection(i)}"
-                  ><ha-icon icon="mdi:close"></ha-icon></mwc-icon-button>
-                </div>
-              </div>
-            `)}
-          </div>
-        </div>
-        <div class="section-outline">
+
+        <!-- Card-level Title (optional, shown above all sections) -->
+        <div class="card-title-section">
           <ha-textfield
             label="Card Title (optional)"
             .value="${this._config.title || ''}"
@@ -280,21 +238,24 @@ class HaNavigationCardEditor extends LitElementBase {
             placeholder="e.g. Quick Links"
             @input="${this._valueChanged}"
           ></ha-textfield>
-          <ha-textfield
-            label="Section Name"
-            .value="${section.title || ''}"
-            placeholder="e.g. Main, Add-ons, Media"
-            @input="${this._updateSectionTitle}"
-          ></ha-textfield>
+          <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
+            Optional heading displayed at the top of the card, above all sections.
+          </div>
+        </div>
 
-          <div class="colors-toggle" style="margin-top:10px;">
-            <ha-formfield .label="${this._showColors? 'Hide advanced color options':'Show advanced color options'}">
+        <!-- Global Color Customization -->
+        <div class="global-colors">
+          <div class="colors-toggle">
+            <ha-formfield .label="${this._showColors? 'Hide color customization':'Show color customization'}">
               <ha-switch .checked="${this._showColors}" @change="${this._toggleColors}"></ha-switch>
             </ha-formfield>
           </div>
           ${this._showColors ? html`
             <div class="colors-section">
-              <h4>Color Customization</h4>
+              <h4>Card-wide Color Customization</h4>
+              <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-bottom:12px;">
+                These colors apply to the entire card (all sections).
+              </div>
               <div class="colors-grid">
                 ${[
                   {k:'title_bg_color', l:'Section Title Background', p:'rgba(7, 7, 50, 0.3)'},
@@ -315,6 +276,66 @@ class HaNavigationCardEditor extends LitElementBase {
               </div>
             </div>
           `: ''}
+        </div>
+
+        <!-- Sections Management -->
+        <div class="section-bar">
+          <div class="sections-header">
+            <h3 style="margin:0 0 8px 0;">Sections (${(this._config.sections || []).length})</h3>
+            <mwc-button raised @click="${this._addSection}" class="add-section-btn" title="Add a new section">
+              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+              Add Section
+            </mwc-button>
+          </div>
+          <div class="sections-list" role="tablist" aria-label="Sections">
+            ${(this._config.sections || []).map((s,i)=> html`
+              <div class="section-selector ${i===this._activeSection? 'active':''}">
+                <mwc-button
+                  class="section-tab"
+                  @click="${()=>this._selectSection(i)}"
+                  role="tab"
+                  aria-selected="${i===this._activeSection}"
+                  title="Edit section: ${s.title || 'Section '+(i+1)}"
+                >
+                  ${s.title || 'Section '+(i+1)}
+                </mwc-button>
+                <div class="section-controls">
+                  <mwc-icon-button
+                    class="move-btn"
+                    title="Move section up"
+                    ?disabled="${i===0}"
+                    @click="${()=>this._moveSection(i,-1)}"
+                  ><ha-icon icon="mdi:chevron-up"></ha-icon></mwc-icon-button>
+                  <mwc-icon-button
+                    class="move-btn"
+                    title="Move section down"
+                    ?disabled="${i===(this._config.sections.length-1)}"
+                    @click="${()=>this._moveSection(i,1)}"
+                  ><ha-icon icon="mdi:chevron-down"></ha-icon></mwc-icon-button>
+                  <mwc-icon-button
+                    class="remove-section"
+                    title="Remove this section"
+                    ?disabled="${this._config.sections.length<=1}"
+                    @click="${()=>this._removeSection(i)}"
+                  ><ha-icon icon="mdi:close"></ha-icon></mwc-icon-button>
+                </div>
+              </div>
+            `)}
+          </div>
+        </div>
+
+        <!-- Current Section Editor -->
+        <div class="section-outline">
+          <ha-textfield
+            label="Section Name"
+            .value="${section.title || ''}"
+            placeholder="e.g. Developer Tools, Add-ons, Media"
+            @input="${this._updateSectionTitle}"
+          ></ha-textfield>
+          <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;margin-bottom:12px;">
+            This is the heading shown above this section's items.
+          </div>
+
           <div class="items-header" style="margin-top:18px;">
               <h3 style="margin-bottom:0;">Navigation Items</h3>
               <span style="color:var(--secondary-text-color,#888);font-size:0.95em;">Each item is a shortcut in this section.</span>
@@ -383,7 +404,10 @@ class HaNavigationCardEditor extends LitElementBase {
               </div>
             `
           )}
-          <mwc-button @click="${this._addItem}" outlined style="margin-top:16px;width:100%;font-weight:bold;--mdc-theme-primary:var(--primary-color);">+ Add Item</mwc-button>
+          <mwc-button raised @click="${this._addItem}" class="add-item-btn">
+            <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+            Add Item
+          </mwc-button>
         </div>
       </div>
     `;
@@ -406,7 +430,7 @@ class HaNavigationCardEditor extends LitElementBase {
             margin-bottom: 12px;
         }
         .section-bar {
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         .section-outline {
             border: 2px solid var(--primary-color, #3f51b5);
@@ -477,18 +501,50 @@ class HaNavigationCardEditor extends LitElementBase {
     gap: 4px;
     align-items: center;
   }
+  .card-title-section {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: var(--card-background-color, transparent);
+  }
+  .global-colors {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: var(--card-background-color, transparent);
+  }
   .colors-section { 
     border: 1px solid var(--divider-color); 
     border-radius: 8px; 
     padding: 12px; 
-    margin: 12px 0; 
-    background: var(--card-background-color, transparent);
+    margin-top: 12px; 
+    background: var(--secondary-background-color, rgba(0,0,0,0.05));
   }
-  .colors-section h4 { margin-top: 0; margin-bottom: 12px; color: var(--primary-text-color); }
+  .colors-section h4 { margin-top: 0; margin-bottom: 8px; color: var(--primary-text-color); }
   .colors-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
   .move-btn { --mdc-icon-size:20px; }
   .remove-section { --mdc-icon-size:20px; }
-  .colors-toggle { margin-top:8px; margin-bottom:4px; }
+  .colors-toggle { margin-top:0; margin-bottom:8px; }
+  
+  /* Make "Add Section" button more prominent */
+  .add-section-btn {
+    --mdc-theme-primary: var(--primary-color);
+    --mdc-theme-on-primary: white;
+    font-weight: 600;
+    min-width: 140px;
+  }
+  
+  /* Make "Add Item" button more prominent */
+  .add-item-btn {
+    margin-top: 16px;
+    width: 100%;
+    --mdc-theme-primary: var(--primary-color);
+    --mdc-theme-on-primary: white;
+    font-weight: 600;
+    min-height: 40px;
+  }
     `;
   }
 }

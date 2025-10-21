@@ -6,7 +6,8 @@
 
 A customizable navigation card for Home Assistant that creates a launcher/dock interface for your Lovelace dashboard. Perfect for quick access to frequently used pages, add-ons, and settings.
 
-![Navigation Card Example](https://github.com/user-attachments/assets/0a237473-397b-44ed-8d18-2546420f05c0)
+<img width="2165" height="1224" alt="image" src="https://github.com/user-attachments/assets/80ca1c44-f2be-4e53-9284-3cf674e17051" />
+
 
 ## ✨ Features
 
@@ -14,10 +15,9 @@ A customizable navigation card for Home Assistant that creates a launcher/dock i
 - 🎯 **Custom Icons & Images** - Use Material Design Icons or custom images
 - ⚙️ **Settings Shortcuts** - Optional gear icon overlay for quick settings access
 - 🖱️ **Visual Editor** - Easy-to-use UI configuration through Lovelace
-- 🎨 **Highly Customizable** - Adjust colors, backgrounds, and styles
+- 🎨 **Customizable** - Adjust colors, backgrounds, and styles
 - 📱 **Responsive Design** - Looks great on mobile and desktop
 - ✨ **Smooth Animations** - Hover effects and smooth transitions
-- 🔒 **Security** - Built-in XSS protection
 
 ## 📦 Installation
 
@@ -30,7 +30,6 @@ A customizable navigation card for Home Assistant that creates a launcher/dock i
 5. Select category "Lovelace"
 6. Click "Add"
 7. Find "Navigation Card" in the list and click "Install"
-8. Restart Home Assistant
 
 ### Manual Installation
 
@@ -65,56 +64,6 @@ sections:
         url: /config/automation/dashboard
 ```
 
-### Advanced Configuration with Settings Links
-
-```yaml
-type: custom:ha-navigation-card
-sections:
-  - title: Add-ons
-    items:
-      - label: Studio Code
-        image: /api/hassio/addons/a0d7b954_vscode/logo
-        url: /a0d7b954_vscode/ingress
-        settings:
-          label: Studio Code Settings
-          url: /hassio/addon/a0d7b954_vscode/config
-          icon: mdi:cog-outline
-      - label: File Editor
-        icon: mdi:file-document-edit
-        url: /hassio/ingress/file-editor
-        settings:
-          label: File Editor Settings
-          url: /hassio/addon/file-editor/config
-          icon: mdi:cog-outline
-  - title: Media
-    items:
-      - label: Media Browser
-        icon: mdi:folder-multiple-image
-        url: /media-browser
-      - label: Spotify
-        icon: mdi:spotify
-        url: /lovelace/spotify
-```
-
-### Custom Colors
-
-```yaml
-type: custom:ha-navigation-card
-sections:
-  - title: Quick Links
-    items:
-      - label: Dashboard
-        icon: mdi:view-dashboard
-        url: /lovelace/0
-colors:
-  title_bg_color: 'rgba(0, 100, 200, 0.3)'
-  item_bg_color: 'rgba(0, 100, 200, 0.2)'
-  item_bg_color_hover: 'rgba(0, 100, 200, 0.4)'
-  icon_bg_color: 'rgba(255, 255, 255, 0.05)'
-  text_color: '#ffffff'
-  settings_icon_color: '#ffa500'
-  settings_icon_size: '20px'
-```
 
 ## 🎨 Configuration Options
 
@@ -184,38 +133,3 @@ Store custom images in your `config/www` folder and reference them as:
 ```yaml
 image: /local/my-icon.png
 ```
-
-### Internal vs External Links
-
-- **Internal navigation** (starts with `/`): Uses Home Assistant's router, no page reload
-- **External links** (starts with `http`): Opens in new context
-
-## 🔧 Troubleshooting
-
-### Card not showing up
-
-1. Clear your browser cache (Ctrl+F5)
-2. Verify the resource is loaded (Settings → Dashboards → Resources)
-3. Check browser console for errors (F12)
-4. Ensure you restarted Home Assistant after installation
-
-### Icons not displaying
-
-- Verify icon names are in format `mdi:icon-name`
-- Check the [MDI icon search](https://pictogrammers.com/library/mdi/) for valid icons
-- For custom icons, ensure the image path is correct
-
-### Navigation not working
-
-- Internal links must start with `/`
-- Check that the URL paths are correct
-- Verify you have permission to access the target page
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
