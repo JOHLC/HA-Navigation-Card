@@ -1,6 +1,6 @@
 // Navigation Card (ha-navigation-card)
 // Lightweight customizable navigation / launcher card for Home Assistant Lovelace
-// https://github.com/user/repo
+// https://github.com/JOHLC/HA-Navigation-Card
 const CARD_VERSION = '0.1.0';
 
 // Attempt to obtain Home Assistant's internal LitElement base (so we use the same instance)
@@ -720,5 +720,5 @@ window.customCards.push({
   name: "Navigation Card",
   preview: true,
   description: "A customizable card for creating navigation docks or menus.",
-  documentationURL: "https://github.com/user/repo", // TODO: Add your documentation link here
+  documentationURL: "https://github.com/JOHLC/HA-Navigation-Card",
 });

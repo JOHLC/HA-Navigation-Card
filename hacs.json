@@ -1,0 +1,7 @@
+{
+  "name": "Navigation Card",
+  "content_in_root": false,
+  "filename": "ha-navigation-card.js",
+  "render_readme": true,
+  "homeassistant": "2023.1.0"
+}
