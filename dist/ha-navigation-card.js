@@ -19,6 +19,17 @@ if (!LitElementBase || !LitElementBase.prototype || !LitElementBase.prototype.ht
 const html = LitElementBase.prototype.html;
 const css = LitElementBase.prototype.css;
 
+// Default color configuration
+const DEFAULT_COLORS = {
+  title_bg_color: 'rgba(7, 7, 50, 0.3)',
+  item_bg_color: 'rgba(7, 7, 50, 0.28)',
+  item_bg_color_hover: 'rgba(5, 5, 50, 0.5)',
+  icon_bg_color: 'rgba(255, 255, 255, 0.03)',
+  text_color: '#fff',
+  settings_icon_color: 'var(--accent-color)',
+  settings_icon_size: '24px'
+};
+
 // Styled console banner (once)
 if (!window.__HA_NAV_CARD_LOGGED) {
   window.__HA_NAV_CARD_LOGGED = true;
@@ -41,7 +52,28 @@ class HaNavigationCardEditor extends LitElementBase {
       sections: config.sections && Array.isArray(config.sections) ? config.sections : [],
       colors: { ...(config.colors || {}) }
     };
-    if (this._activeSection == null) this._activeSection = 0;
+    // Ensure sections have valid structure
+    this._config.sections = this._config.sections.map(section => ({
+      ...section,
+      items: Array.isArray(section.items) ? section.items : []
+    }));
+    if (this._activeSection == null || this._activeSection >= this._config.sections.length) {
+      this._activeSection = 0;
+    }
+  }
+
+  // Helper method to update an item in the active section
+  _updateSectionItem(index, updater) {
+    const newConfig = { ...this._config };
+    const newSections = [...newConfig.sections];
+    const sectionIdx = this._activeSection || 0;
+    const section = { ...newSections[sectionIdx] };
+    const newItems = [...(section.items || [])];
+    newItems[index] = updater(newItems[index]);
+    section.items = newItems;
+    newSections[sectionIdx] = section;
+    newConfig.sections = newSections;
+    this._dispatchConfigChanged(newConfig);
   }
 
   _valueChanged(ev) {
@@ -67,54 +99,31 @@ class HaNavigationCardEditor extends LitElementBase {
   }
 
   _itemChanged(ev, index, key) {
-    const newConfig = { ...this._config };
-    const newSections = [...newConfig.sections];
-  const section = { ...newSections[this._activeSection || 0] };
-    const newItems = [...(section.items || [])];
-    newItems[index] = { ...newItems[index], [key]: ev.target.value };
-    section.items = newItems;
-  newSections[this._activeSection || 0] = section;
-    newConfig.sections = newSections;
-    this._dispatchConfigChanged(newConfig);
+    this._updateSectionItem(index, item => ({ ...item, [key]: ev.target.value }));
   }
 
   _toggleSettings(ev, index) {
     const enable = ev.target.checked;
-    const newConfig = { ...this._config };
-    const newSections = [...newConfig.sections];
-  const section = { ...newSections[this._activeSection || 0] };
-    const newItems = [...(section.items || [])];
-    const item = { ...newItems[index] };
-    if (enable) {
-      item.settings = item.settings || {
-        label: (item.label || 'Item') + ' Settings',
-        url: item.url || '#',
-        icon: 'mdi:cog-outline'
-      };
-    } else {
-      delete item.settings;
-    }
-    newItems[index] = item;
-    section.items = newItems;
-  newSections[this._activeSection || 0] = section;
-    newConfig.sections = newSections;
-    this._dispatchConfigChanged(newConfig);
+    this._updateSectionItem(index, item => {
+      const newItem = { ...item };
+      if (enable) {
+        newItem.settings = newItem.settings || {
+          label: (item.label || 'Item') + ' Settings',
+          url: item.url || '#',
+          icon: 'mdi:cog-outline'
+        };
+      } else {
+        delete newItem.settings;
+      }
+      return newItem;
+    });
   }
 
   _settingsFieldChanged(ev, index, field) {
-    const newConfig = { ...this._config };
-    const newSections = [...newConfig.sections];
-  const section = { ...newSections[this._activeSection || 0] };
-    const newItems = [...(section.items || [])];
-    const item = { ...newItems[index] };
-    const settings = { ...(item.settings || {}) };
-    settings[field] = ev.target.value;
-    item.settings = settings;
-    newItems[index] = item;
-    section.items = newItems;
-  newSections[this._activeSection || 0] = section;
-    newConfig.sections = newSections;
-    this._dispatchConfigChanged(newConfig);
+    this._updateSectionItem(index, item => ({
+      ...item,
+      settings: { ...(item.settings || {}), [field]: ev.target.value }
+    }));
   }
 
   _addItem() {
@@ -143,7 +152,21 @@ class HaNavigationCardEditor extends LitElementBase {
   }
 
   // Section management
-  _selectSection(index) { this._activeSection = index; this.requestUpdate(); }
+  _selectSection(index) { 
+    this._activeSection = index; 
+    this.requestUpdate(); 
+  }
+
+  _updateSectionTitle(ev) {
+    const newConfig = { ...this._config };
+    const newSections = [...newConfig.sections];
+    const section = { ...newSections[this._activeSection || 0] };
+    section.title = ev.target.value;
+    newSections[this._activeSection || 0] = section;
+    newConfig.sections = newSections;
+    this._dispatchConfigChanged(newConfig);
+  }
+
   _addSection() {
     const newConfig = { ...this._config };
     const sections = [...(newConfig.sections || [])];
@@ -152,6 +175,7 @@ class HaNavigationCardEditor extends LitElementBase {
     this._activeSection = sections.length - 1;
     this._dispatchConfigChanged(newConfig);
   }
+
   _removeSection(index) {
     const newConfig = { ...this._config };
     const sections = [...(newConfig.sections || [])];
@@ -161,6 +185,7 @@ class HaNavigationCardEditor extends LitElementBase {
     if (this._activeSection >= sections.length) this._activeSection = sections.length - 1;
     this._dispatchConfigChanged(newConfig);
   }
+
   _moveSection(index, dir) {
     const newIndex = index + dir;
     const newConfig = { ...this._config };
@@ -204,35 +229,47 @@ class HaNavigationCardEditor extends LitElementBase {
           Configure navigation sections and items for your Home Assistant dashboard. Each section can have a name and multiple navigation items. Use the advanced options to customize colors.
         </div>
         <div class="section-bar">
+          <div class="sections-header">
+            <h3 style="margin:0 0 8px 0;">Sections (${(this._config.sections || []).length})</h3>
+            <mwc-button outlined @click="${this._addSection}" class="add-section" title="Add a new section">
+              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+              Add Section
+            </mwc-button>
+          </div>
           <div class="sections-list" role="tablist" aria-label="Sections">
             ${(this._config.sections || []).map((s,i)=> html`
-              <mwc-button
-                class="section-tab ${i===this._activeSection? 'active':''}"
-                @click="${()=>this._selectSection(i)}"
-                role="tab"
-                aria-selected="${i===this._activeSection}"
-                title="Edit section: ${s.title || 'Section '+(i+1)}"
-              >${s.title || 'Section '+(i+1)}</mwc-button>
-              <mwc-icon-button
-                class="move-btn"
-                title="Move section left"
-                ?disabled="${i===0}"
-                @click="${()=>this._moveSection(i,-1)}"
-              ><ha-icon icon="mdi:chevron-left"></ha-icon></mwc-icon-button>
-              <mwc-icon-button
-                class="move-btn"
-                title="Move section right"
-                ?disabled="${i===(this._config.sections.length-1)}"
-                @click="${()=>this._moveSection(i,1)}"
-              ><ha-icon icon="mdi:chevron-right"></ha-icon></mwc-icon-button>
-              <mwc-icon-button
-                class="remove-section"
-                title="Remove this section"
-                ?disabled="${this._config.sections.length<=1}"
-                @click="${()=>this._removeSection(i)}"
-              ><ha-icon icon="mdi:close"></ha-icon></mwc-icon-button>
+              <div class="section-selector ${i===this._activeSection? 'active':''}">
+                <mwc-button
+                  class="section-tab"
+                  @click="${()=>this._selectSection(i)}"
+                  role="tab"
+                  aria-selected="${i===this._activeSection}"
+                  title="Edit section: ${s.title || 'Section '+(i+1)}"
+                >
+                  ${s.title || 'Section '+(i+1)}
+                </mwc-button>
+                <div class="section-controls">
+                  <mwc-icon-button
+                    class="move-btn"
+                    title="Move section left"
+                    ?disabled="${i===0}"
+                    @click="${()=>this._moveSection(i,-1)}"
+                  ><ha-icon icon="mdi:chevron-left"></ha-icon></mwc-icon-button>
+                  <mwc-icon-button
+                    class="move-btn"
+                    title="Move section right"
+                    ?disabled="${i===(this._config.sections.length-1)}"
+                    @click="${()=>this._moveSection(i,1)}"
+                  ><ha-icon icon="mdi:chevron-right"></ha-icon></mwc-icon-button>
+                  <mwc-icon-button
+                    class="remove-section"
+                    title="Remove this section"
+                    ?disabled="${this._config.sections.length<=1}"
+                    @click="${()=>this._removeSection(i)}"
+                  ><ha-icon icon="mdi:close"></ha-icon></mwc-icon-button>
+                </div>
+              </div>
             `)}
-            <mwc-button outlined @click="${this._addSection}" class="add-section" title="Add a new section">Add Section</mwc-button>
           </div>
         </div>
         <div class="section-outline">
@@ -247,7 +284,7 @@ class HaNavigationCardEditor extends LitElementBase {
             label="Section Name"
             .value="${section.title || ''}"
             placeholder="e.g. Main, Add-ons, Media"
-            @input="${(e)=>{const newConfig={...this._config}; const secs=[...newConfig.sections]; const sec={...secs[this._activeSection]}; sec.title=e.target.value; secs[this._activeSection]=sec; newConfig.sections=secs; this._dispatchConfigChanged(newConfig);}}"
+            @input="${this._updateSectionTitle}"
           ></ha-textfield>
 
           <div class="colors-toggle" style="margin-top:10px;">
@@ -256,23 +293,26 @@ class HaNavigationCardEditor extends LitElementBase {
             </ha-formfield>
           </div>
           ${this._showColors ? html`
-            <div class="colors-grid">
-              ${[
-                {k:'title_bg_color', l:'Section Title Background'},
-                {k:'item_bg_color', l:'Item Background'},
-                {k:'item_bg_color_hover', l:'Item Hover Background'},
-                {k:'icon_bg_color', l:'Icon Background'},
-                {k:'text_color', l:'Text Color'},
-                {k:'settings_icon_color', l:'Settings Icon Color'},
-                {k:'settings_icon_size', l:'Settings Icon Size (px)'}
-              ].map(({k,l})=> html`
-                <ha-textfield
-                  label="${l}"
-                  .value="${(this._config.colors && this._config.colors[k]) || ''}"
-                  placeholder="${k.includes('color') ? '#fff or rgba(0,0,0,0.2)' : ''}"
-                  @input="${(e)=>this._colorChanged(e,k)}"
-                ></ha-textfield>
-              `)}
+            <div class="colors-section">
+              <h4>Color Customization</h4>
+              <div class="colors-grid">
+                ${[
+                  {k:'title_bg_color', l:'Section Title Background', p:'rgba(7, 7, 50, 0.3)'},
+                  {k:'item_bg_color', l:'Item Background', p:'rgba(7, 7, 50, 0.28)'},
+                  {k:'item_bg_color_hover', l:'Item Hover Background', p:'rgba(5, 5, 50, 0.5)'},
+                  {k:'icon_bg_color', l:'Icon Background', p:'rgba(255, 255, 255, 0.03)'},
+                  {k:'text_color', l:'Text Color', p:'#fff'},
+                  {k:'settings_icon_color', l:'Settings Icon Color', p:'var(--accent-color)'},
+                  {k:'settings_icon_size', l:'Settings Icon Size', p:'24px'}
+                ].map(({k,l,p})=> html`
+                  <ha-textfield
+                    label="${l}"
+                    .value="${(this._config.colors && this._config.colors[k]) || ''}"
+                    placeholder="${p}"
+                    @input="${(e)=>this._colorChanged(e,k)}"
+                  ></ha-textfield>
+                `)}
+              </div>
             </div>
           `: ''}
           <div class="items-header" style="margin-top:18px;">
@@ -399,10 +439,53 @@ class HaNavigationCardEditor extends LitElementBase {
           margin-top: 4px;
           margin-bottom: 4px;
         }
-  .sections-list { display: flex; flex-wrap: wrap; gap:4px; align-items: center; }
-  .section-tab.active { --mdc-theme-primary: var(--primary-color); font-weight:600; }
-  .colors-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap:8px; margin:8px 0 12px; }
-  .add-section { margin-left:4px; }
+  .sections-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .sections-list { 
+    display: flex; 
+    flex-direction: column;
+    gap: 8px;
+  }
+  .section-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: var(--card-background-color, transparent);
+  }
+  .section-selector.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color, #3f51b5)10;
+  }
+  .section-selector .section-tab {
+    flex: 1;
+    justify-content: flex-start;
+    --mdc-theme-primary: var(--primary-text-color);
+  }
+  .section-selector.active .section-tab {
+    --mdc-theme-primary: var(--primary-color);
+    font-weight: 600;
+  }
+  .section-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .colors-section { 
+    border: 1px solid var(--divider-color); 
+    border-radius: 8px; 
+    padding: 12px; 
+    margin: 12px 0; 
+    background: var(--card-background-color, transparent);
+  }
+  .colors-section h4 { margin-top: 0; margin-bottom: 12px; color: var(--primary-text-color); }
+  .colors-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
   .move-btn { --mdc-icon-size:20px; }
   .remove-section { --mdc-icon-size:20px; }
   .colors-toggle { margin-top:8px; margin-bottom:4px; }
@@ -423,6 +506,13 @@ class HaNavigationCard extends LitElementBase {
     if (!config.sections || !Array.isArray(config.sections)) {
       throw new Error("You need to define an array of sections");
     }
+    // Validate sections have valid structure
+    config.sections.forEach((section, idx) => {
+      if (!section.items || !Array.isArray(section.items)) {
+        console.warn(`[ha-navigation-card] Section ${idx} missing items array, using empty array`);
+        section.items = [];
+      }
+    });
     this.config = config;
   }
 
@@ -456,89 +546,76 @@ class HaNavigationCard extends LitElementBase {
           ]
         }
       ],
-      colors: {
-        title_bg_color: 'rgba(7, 7, 50, 0.3)',
-        item_bg_color: 'rgba(7, 7, 50, 0.28)',
-        item_bg_color_hover: 'rgba(5, 5, 50, 0.5)',
-        icon_bg_color: 'rgba(255, 255, 255, 0.03)',
-        text_color: '#fff',
-  settings_icon_color: 'var(--accent-color)',
-      }
+      colors: { ...DEFAULT_COLORS }
     };
   }
 
   render() {
     const colors = {
-        title_bg_color: 'rgba(7, 7, 50, 0.3)',
-        item_bg_color: 'rgba(7, 7, 50, 0.28)',
-        item_bg_color_hover: 'rgba(5, 5, 50, 0.5)',
-        icon_bg_color: 'rgba(255, 255, 255, 0.03)',
-        text_color: '#fff',
-  settings_icon_color: 'var(--accent-color)',
-        ...(this.config.colors || {}),
+      ...DEFAULT_COLORS,
+      ...(this.config.colors || {}),
     };
 
-    const style = html`
-        <style>
-            :host {
-                --nav-title-bg-color: ${colors.title_bg_color};
-                --nav-item-bg-color: ${colors.item_bg_color};
-                --nav-item-bg-color-hover: ${colors.item_bg_color_hover};
-                --nav-icon-bg-color: ${colors.icon_bg_color};
-                --nav-text-color: ${colors.text_color};
-                --nav-settings-icon-color: ${colors.settings_icon_color};
-                /* size of the settings cog (can be overridden by theme or card-mod) */
-                --nav-settings-icon-size: ${colors.settings_icon_size || '24px'};
-            }
-        </style>
+    // Apply CSS variables via inline style for dynamic color support
+    const styleVars = `
+      --nav-title-bg-color: ${colors.title_bg_color};
+      --nav-item-bg-color: ${colors.item_bg_color};
+      --nav-item-bg-color-hover: ${colors.item_bg_color_hover};
+      --nav-icon-bg-color: ${colors.icon_bg_color};
+      --nav-text-color: ${colors.text_color};
+      --nav-settings-icon-color: ${colors.settings_icon_color};
+      --nav-settings-icon-size: ${colors.settings_icon_size || '24px'};
     `;
 
     return html`
-      ${style}
-      <div class="dock-container" role="navigation" aria-label="Home shortcuts">
-        ${this.config.sections.map(section => html`
-          <div class="dock-section">
-            ${section.title ? html`<h3>${section.title}</h3>` : ""}
-            <div class="dock">
-              ${section.items.map((item) => {
-                const safe = this._sanitizeItem(item);
-                const icon = safe.image
-                  ? html`<img loading="lazy" src="${safe.image}" alt="${safe.label}" />`
-                  : html`<ha-icon icon="${safe.icon || 'mdi:link'}"></ha-icon>`;
-
-                const settings = safe.settings
-                  ? html`
-                      <span
-                        class="dock-item-settings"
-                        title="${safe.settings.label || 'Settings'}"
-                        role="button"
-                        tabindex="0"
-                        @click="${(e) => this._handleSettingsClick(e, safe.settings.url)}"
-                      >
-                        <ha-icon icon="${safe.settings.icon || 'mdi:cog-outline'}"></ha-icon>
-                      </span>
-                    `
-                  : '';
-
-                return html`
-                  <a
-                    class="dock-item"
-                    href="${safe.url}"
-                    title="${safe.label}"
-                    role="link"
-                    aria-label="${safe.label}"
-                    @click="${(e)=>this._onItemClick(e, safe.url)}"
-                  >
-                    ${icon}
-                    <span class="label">${safe.label}</span>
-                    ${settings}
-                  </a>
-                `;
-              })}
-            </div>
-          </div>
-        `)}
+      <div class="dock-container" role="navigation" aria-label="Home shortcuts" style="${styleVars}">
+        ${this.config.sections.map(section => this._renderSection(section))}
       </div>
+    `;
+  }
+
+  _renderSection(section) {
+    return html`
+      <div class="dock-section">
+        ${section.title ? html`<h3>${section.title}</h3>` : ""}
+        <div class="dock">
+          ${section.items.map(item => this._renderItem(item))}
+        </div>
+      </div>
+    `;
+  }
+
+  _renderItem(item) {
+    const safe = this._sanitizeItem(item);
+    const icon = safe.image
+      ? html`<img loading="lazy" src="${safe.image}" alt="${safe.label}" />`
+      : html`<ha-icon icon="${safe.icon || 'mdi:link'}"></ha-icon>`;
+
+    const settings = safe.settings ? html`
+      <span
+        class="dock-item-settings"
+        title="${safe.settings.label || 'Settings'}"
+        role="button"
+        tabindex="0"
+        @click="${(e) => this._handleSettingsClick(e, safe.settings.url)}"
+        @keydown="${(e) => e.key === 'Enter' && this._handleSettingsClick(e, safe.settings.url)}"
+      >
+        <ha-icon icon="${safe.settings.icon || 'mdi:cog-outline'}"></ha-icon>
+      </span>
+    ` : '';
+
+    return html`
+      <a
+        class="dock-item"
+        href="${safe.url}"
+        title="${safe.label}"
+        aria-label="${safe.label}"
+        @click="${(e) => this._onItemClick(e, safe.url)}"
+      >
+        ${icon}
+        <span class="label">${safe.label}</span>
+        ${settings}
+      </a>
     `;
   }
 
@@ -557,45 +634,61 @@ class HaNavigationCard extends LitElementBase {
   }
 
   _navigate(url) {
-    if (!url) return;
+    if (!url || url === '#') return;
+    
     try {
-      // Prefer HA's navigation helper if present
-      const nav = window?.history;
-      if (url.startsWith(window.location.origin)) {
-        url = url.replace(window.location.origin, '');
+      // Normalize URL - remove origin if present to get path
+      let targetUrl = url;
+      if (targetUrl.startsWith(window.location.origin)) {
+        targetUrl = targetUrl.substring(window.location.origin.length);
       }
-      if (nav && url.startsWith('/')) {
-        nav.pushState(null, '', url);
-        window.dispatchEvent(new Event('location-changed'));
+      
+      // Internal navigation for paths starting with /
+      if (targetUrl.startsWith('/')) {
+        window.history.pushState(null, '', targetUrl);
+        window.dispatchEvent(new Event('location-changed', {
+          bubbles: false,
+          cancelable: false,
+          composed: true
+        }));
       } else {
+        // External navigation
         window.location.assign(url);
       }
     } catch (err) {
       console.error('[ha-navigation-card] navigation error', err);
+      // Fallback to direct assignment
       window.location.href = url;
     }
   }
 
   _sanitizeItem(item) {
-    const out = { ...item };
-    const blockProtocols = ['javascript:', 'data:'];
-    if (typeof out.url === 'string') {
-      const trimmed = out.url.trim();
-      const lower = trimmed.toLowerCase();
-      if (blockProtocols.some(p => lower.startsWith(p))) {
-        console.warn('[ha-navigation-card] blocked unsafe url', out.url);
-        out.url = '#';
-      }
-    } else {
-      out.url = '#';
+    if (typeof item.url !== 'string') {
+      return { ...item, url: '#' };
     }
-    return out;
+    const trimmedUrl = item.url.trim().toLowerCase();
+    if (trimmedUrl.startsWith('javascript:') || trimmedUrl.startsWith('data:')) {
+      console.warn('[ha-navigation-card] blocked unsafe url', item.url);
+      return { ...item, url: '#' };
+    }
+    return item;
   }
 
   getCardSize() {
-    // Rough estimate: number of sections * 2 (header + row) capped minimum 2
-    if (!this.config?.sections) return 2;
-    return Math.max(2, this.config.sections.length * 2);
+    if (!this.config?.sections || !Array.isArray(this.config.sections)) return 2;
+    
+    // Calculate size based on sections and items
+    // Each section with title takes ~2 units, items add to height based on wrapping
+    let size = 0;
+    this.config.sections.forEach(section => {
+      // Section header
+      size += section.title ? 1.5 : 0.5;
+      // Items (estimate 3 items per row, each row ~1.5 units)
+      const itemCount = section.items?.length || 0;
+      size += Math.ceil(itemCount / 3) * 1.5;
+    });
+    
+    return Math.max(2, Math.ceil(size));
   }
 
   static get styles() {
@@ -646,9 +739,15 @@ class HaNavigationCard extends LitElementBase {
         font-weight: 600;
         cursor: pointer;
       }
-      .dock-item:hover {
+      .dock-item:hover,
+      .dock-item:focus {
         transform: translateY(-4px);
         background: var(--nav-item-bg-color-hover);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+      }
+      .dock-item:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
       }
       .dock-item img {
         width: 48px;
@@ -689,22 +788,44 @@ class HaNavigationCard extends LitElementBase {
         transition: background 0.15s;
         color: var(--nav-settings-icon-color);
         text-decoration: none;
+        cursor: pointer;
       }
-      .dock-item-settings:hover {
+      .dock-item-settings:hover,
+      .dock-item-settings:focus {
         background: rgba(0,0,0,0.2);
+        outline: none;
+      }
+      .dock-item-settings:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
       }
       .dock-item-settings ha-icon {
-  --mdc-icon-size: var(--nav-settings-icon-size, 24px);
-  width: var(--nav-settings-icon-size, 24px);
-  height: var(--nav-settings-icon-size, 24px);
+        --mdc-icon-size: var(--nav-settings-icon-size, 24px);
+        width: var(--nav-settings-icon-size, 24px);
+        height: var(--nav-settings-icon-size, 24px);
         display: block;
         background: none;
         border-radius: 0;
         margin-bottom: 0;
       }
-      @media (max-width: 480px) {
+      @media (max-width: 600px) {
         .dock-item {
-          min-width: 88px;
+          min-width: 100px;
+          padding: 6px 8px;
+        }
+        .dock-item ha-icon,
+        .dock-item img {
+          width: 40px;
+          height: 40px;
+          --mdc-icon-size: 40px;
+        }
+        .dock-item .label {
+          font-size: 0.85rem;
+        }
+      }
+      @media (max-width: 400px) {
+        .dock-item {
+          min-width: 80px;
           padding: 6px;
         }
         .dock-item-settings ha-icon {
