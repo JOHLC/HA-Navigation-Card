@@ -1,6 +1,5 @@
 # Navigation Card for Home Assistant
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/release/JOHLC/HA-Navigation-Card.svg)](https://github.com/JOHLC/HA-Navigation-Card/releases)
 ![GitHub Release Date](https://img.shields.io/github/release-date/JOHLC/HA-Navigation-Card)
 
