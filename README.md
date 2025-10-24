@@ -2,6 +2,7 @@
 
 [![GitHub Release](https://img.shields.io/github/release/JOHLC/HA-Navigation-Card.svg)](https://github.com/JOHLC/HA-Navigation-Card/releases)
 ![GitHub Release Date](https://img.shields.io/github/release-date/JOHLC/HA-Navigation-Card)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/JOHLC/HA-Navigation-Card/total)
 
 A customizable navigation card for Home Assistant that creates a launcher/dock interface on your Lovelace dashboard. Perfect for quick access to frequently used pages, add-ons, and settings.
 
