@@ -1,7 +1,7 @@
 // Navigation Card (ha-navigation-card)
 // Lightweight customizable navigation / launcher card for Home Assistant Lovelace
 // https://github.com/JOHLC/HA-Navigation-Card
-const CARD_VERSION = '0.1.1';
+const CARD_VERSION = '0.2.0';
 
 // Attempt to obtain Home Assistant's internal LitElement base (so we use the same instance)
 // Fallback gracefully if HA elements not yet defined when this script is evaluated.
@@ -27,7 +27,8 @@ const DEFAULT_COLORS = {
   icon_bg_color: 'rgba(255, 255, 255, 0.03)',
   text_color: '#fff',
   settings_icon_color: 'var(--accent-color)',
-  settings_icon_size: '24px'
+  settings_icon_size: '24px',
+  alignment: 'center'
 };
 
 // Styled console banner (once)
@@ -255,6 +256,21 @@ class HaNavigationCardEditor extends LitElementBase {
               <h4>Card-wide Color Customization</h4>
               <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-bottom:12px;">
                 These colors apply to the entire card (all sections).
+              </div>
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--primary-text-color); font-weight: 500;">Alignment</label>
+                <select 
+                  style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-size: 14px;"
+                  .value="${(this._config.colors && this._config.colors.alignment) || 'center'}"
+                  @change="${(e)=>this._colorChanged(e,'alignment')}"
+                >
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+                <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
+                  Align section titles and navigation items
+                </div>
               </div>
               <div class="colors-grid">
                 ${[
@@ -602,7 +618,7 @@ class HaNavigationCard extends LitElementBase {
           ]
         }
       ],
-      colors: { ...DEFAULT_COLORS }
+      colors: DEFAULT_COLORS
     };
   }
 
@@ -621,6 +637,7 @@ class HaNavigationCard extends LitElementBase {
       --nav-text-color: ${colors.text_color};
       --nav-settings-icon-color: ${colors.settings_icon_color};
       --nav-settings-icon-size: ${colors.settings_icon_size || '24px'};
+      --nav-alignment: ${colors.alignment || 'center'};
     `;
 
     return html`
@@ -764,18 +781,43 @@ class HaNavigationCard extends LitElementBase {
         font-weight: bold;
         min-width: 150px;
         width: fit-content;
+        color: var(--nav-text-color);
+      }
+      /* Alignment for center */
+      .dock-container[style*="--nav-alignment: center"] .dock-section h3 {
         text-align: center;
-        display: block;
         margin-left: auto;
         margin-right: auto;
-        color: var(--nav-text-color);
+      }
+      /* Alignment for left */
+      .dock-container[style*="--nav-alignment: left"] .dock-section h3 {
+        text-align: left;
+        margin-left: 0;
+        margin-right: auto;
+      }
+      /* Alignment for right */
+      .dock-container[style*="--nav-alignment: right"] .dock-section h3 {
+        text-align: right;
+        margin-left: auto;
+        margin-right: 0;
       }
       .dock {
         display: flex;
         flex-wrap: wrap;
-        justify-content: center;
         gap: 8px;
         padding: 4px 6px;
+      }
+      /* Alignment for center */
+      .dock-container[style*="--nav-alignment: center"] .dock {
+        justify-content: center;
+      }
+      /* Alignment for left */
+      .dock-container[style*="--nav-alignment: left"] .dock {
+        justify-content: flex-start;
+      }
+      /* Alignment for right */
+      .dock-container[style*="--nav-alignment: right"] .dock {
+        justify-content: flex-end;
       }
       .dock-item {
         position: relative;
