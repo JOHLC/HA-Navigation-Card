@@ -79,7 +79,7 @@ sections:
       - label: Services
         icon: mdi:room-service
         url: /developer-tools/service
-colors:
+styles:
   alignment: left
 ```
 
@@ -92,6 +92,7 @@ colors:
 |------|------|---------|-------------|
 | `sections` | array | **Required** | Array of navigation sections |
 | `title` | string | _optional_ | Optional card title |
+| `styles` | object | _optional_ | Custom style overrides |
 | `colors` | object | _optional_ | Custom color overrides |
 
 ### Section Options
@@ -119,6 +120,12 @@ colors:
 | `url` | string | Settings page URL |
 | `icon` | string | Icon for the settings button |
 
+### Style Options
+
+| Name | Type | Description |
+|------|------|-------------|
+| `alignment` | string | Alignment of titles and items: `left`, `center` (default), or `right` |
+
 ### Color Options
 
 | Name | Type | Description |
@@ -130,7 +137,6 @@ colors:
 | `text_color` | string | Text color |
 | `settings_icon_color` | string | Color of settings icon |
 | `settings_icon_size` | string | Size of settings icon (e.g., `24px`) |
-| `alignment` | string | Alignment of titles and items: `left`, `center` (default), or `right` |
 
 ## 🎯 Usage Tips
 

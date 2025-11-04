@@ -27,7 +27,11 @@ const DEFAULT_COLORS = {
   icon_bg_color: 'rgba(255, 255, 255, 0.03)',
   text_color: '#fff',
   settings_icon_color: 'var(--accent-color)',
-  settings_icon_size: '24px',
+  settings_icon_size: '24px'
+};
+
+// Default style configuration
+const DEFAULT_STYLES = {
   alignment: 'center'
 };
 
@@ -51,7 +55,8 @@ class HaNavigationCardEditor extends LitElementBase {
     this._config = {
       ...config,
       sections: config.sections && Array.isArray(config.sections) ? config.sections : [],
-      colors: { ...(config.colors || {}) }
+      colors: { ...(config.colors || {}) },
+      styles: { ...(config.styles || {}) }
     };
     // Ensure sections have valid structure
     this._config.sections = this._config.sections.map(section => ({
@@ -205,6 +210,12 @@ class HaNavigationCardEditor extends LitElementBase {
     this._dispatchConfigChanged(newConfig);
   }
 
+  _styleChanged(ev,key){
+    const newConfig = { ...this._config, styles: { ...(this._config.styles||{}) } };
+    newConfig.styles[key] = ev.target.value;
+    this._dispatchConfigChanged(newConfig);
+  }
+
   _toggleColors(){ this._showColors = !this._showColors; }
 
   _dispatchConfigChanged(config) {
@@ -244,6 +255,29 @@ class HaNavigationCardEditor extends LitElementBase {
           </div>
         </div>
 
+        <!-- Global Styles Customization -->
+        <div class="global-styles">
+          <h4 style="margin: 0 0 12px 0; color: var(--primary-text-color);">Card Styles</h4>
+          <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-bottom:12px;">
+            Customize the appearance and layout of the card.
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; color: var(--primary-text-color); font-weight: 500;">Alignment</label>
+            <select 
+              style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-size: 14px;"
+              .value="${(this._config.styles && this._config.styles.alignment) || (this._config.colors && this._config.colors.alignment) || 'center'}"
+              @change="${(e)=>this._styleChanged(e,'alignment')}"
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+            <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
+              Align section titles and navigation items
+            </div>
+          </div>
+        </div>
+
         <!-- Global Color Customization -->
         <div class="global-colors">
           <div class="colors-toggle">
@@ -256,21 +290,6 @@ class HaNavigationCardEditor extends LitElementBase {
               <h4>Card-wide Color Customization</h4>
               <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-bottom:12px;">
                 These colors apply to the entire card (all sections).
-              </div>
-              <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; color: var(--primary-text-color); font-weight: 500;">Alignment</label>
-                <select 
-                  style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-size: 14px;"
-                  .value="${(this._config.colors && this._config.colors.alignment) || 'center'}"
-                  @change="${(e)=>this._colorChanged(e,'alignment')}"
-                >
-                  <option value="left">Left</option>
-                  <option value="center">Center</option>
-                  <option value="right">Right</option>
-                </select>
-                <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
-                  Align section titles and navigation items
-                </div>
               </div>
               <div class="colors-grid">
                 ${[
@@ -524,6 +543,13 @@ class HaNavigationCardEditor extends LitElementBase {
     margin-bottom: 16px;
     background: var(--card-background-color, transparent);
   }
+  .global-styles {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: var(--card-background-color, transparent);
+  }
   .global-colors {
     border: 1px solid var(--divider-color);
     border-radius: 8px;
@@ -618,7 +644,8 @@ class HaNavigationCard extends LitElementBase {
           ]
         }
       ],
-      colors: { ...DEFAULT_COLORS }
+      colors: { ...DEFAULT_COLORS },
+      styles: { ...DEFAULT_STYLES }
     };
   }
 
@@ -628,7 +655,13 @@ class HaNavigationCard extends LitElementBase {
       ...(this.config.colors || {}),
     };
 
-    const alignment = colors.alignment || 'center';
+    const styles = {
+      ...DEFAULT_STYLES,
+      ...(this.config.styles || {}),
+    };
+
+    // Support backward compatibility: check styles.alignment first, then colors.alignment
+    const alignment = styles.alignment || colors.alignment || 'center';
 
     // Apply CSS variables via inline style for dynamic color support
     const styleVars = `
