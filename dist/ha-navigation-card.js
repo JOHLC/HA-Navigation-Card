@@ -618,7 +618,7 @@ class HaNavigationCard extends LitElementBase {
           ]
         }
       ],
-      colors: DEFAULT_COLORS
+      colors: { ...DEFAULT_COLORS }
     };
   }
 
@@ -627,6 +627,8 @@ class HaNavigationCard extends LitElementBase {
       ...DEFAULT_COLORS,
       ...(this.config.colors || {}),
     };
+
+    const alignment = colors.alignment || 'center';
 
     // Apply CSS variables via inline style for dynamic color support
     const styleVars = `
@@ -637,11 +639,10 @@ class HaNavigationCard extends LitElementBase {
       --nav-text-color: ${colors.text_color};
       --nav-settings-icon-color: ${colors.settings_icon_color};
       --nav-settings-icon-size: ${colors.settings_icon_size || '24px'};
-      --nav-alignment: ${colors.alignment || 'center'};
     `;
 
     return html`
-      <div class="dock-container" role="navigation" aria-label="Home shortcuts" style="${styleVars}">
+      <div class="dock-container" data-alignment="${alignment}" role="navigation" aria-label="Home shortcuts" style="${styleVars}">
         ${this.config.sections.map(section => this._renderSection(section))}
       </div>
     `;
@@ -784,19 +785,19 @@ class HaNavigationCard extends LitElementBase {
         color: var(--nav-text-color);
       }
       /* Alignment for center */
-      .dock-container[style*="--nav-alignment: center"] .dock-section h3 {
+      .dock-container[data-alignment="center"] .dock-section h3 {
         text-align: center;
         margin-left: auto;
         margin-right: auto;
       }
       /* Alignment for left */
-      .dock-container[style*="--nav-alignment: left"] .dock-section h3 {
+      .dock-container[data-alignment="left"] .dock-section h3 {
         text-align: left;
         margin-left: 0;
         margin-right: auto;
       }
       /* Alignment for right */
-      .dock-container[style*="--nav-alignment: right"] .dock-section h3 {
+      .dock-container[data-alignment="right"] .dock-section h3 {
         text-align: right;
         margin-left: auto;
         margin-right: 0;
@@ -808,15 +809,15 @@ class HaNavigationCard extends LitElementBase {
         padding: 4px 6px;
       }
       /* Alignment for center */
-      .dock-container[style*="--nav-alignment: center"] .dock {
+      .dock-container[data-alignment="center"] .dock {
         justify-content: center;
       }
       /* Alignment for left */
-      .dock-container[style*="--nav-alignment: left"] .dock {
+      .dock-container[data-alignment="left"] .dock {
         justify-content: flex-start;
       }
       /* Alignment for right */
-      .dock-container[style*="--nav-alignment: right"] .dock {
+      .dock-container[data-alignment="right"] .dock {
         justify-content: flex-end;
       }
       .dock-item {
