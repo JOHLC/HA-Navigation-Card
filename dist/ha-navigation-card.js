@@ -1,7 +1,7 @@
 // Navigation Card (ha-navigation-card)
 // Lightweight customizable navigation / launcher card for Home Assistant Lovelace
 // https://github.com/JOHLC/HA-Navigation-Card
-const CARD_VERSION = '0.1.1';
+const CARD_VERSION = '0.2.0';
 
 // Attempt to obtain Home Assistant's internal LitElement base (so we use the same instance)
 // Fallback gracefully if HA elements not yet defined when this script is evaluated.
@@ -30,6 +30,11 @@ const DEFAULT_COLORS = {
   settings_icon_size: '24px'
 };
 
+// Default style configuration
+const DEFAULT_STYLES = {
+  alignment: 'center'
+};
+
 // Styled console banner (once)
 if (!window.__HA_NAV_CARD_LOGGED) {
   window.__HA_NAV_CARD_LOGGED = true;
@@ -50,7 +55,8 @@ class HaNavigationCardEditor extends LitElementBase {
     this._config = {
       ...config,
       sections: config.sections && Array.isArray(config.sections) ? config.sections : [],
-      colors: { ...(config.colors || {}) }
+      colors: { ...(config.colors || {}) },
+      styles: { ...(config.styles || {}) }
     };
     // Ensure sections have valid structure
     this._config.sections = this._config.sections.map(section => ({
@@ -204,6 +210,12 @@ class HaNavigationCardEditor extends LitElementBase {
     this._dispatchConfigChanged(newConfig);
   }
 
+  _styleChanged(ev,key){
+    const newConfig = { ...this._config, styles: { ...(this._config.styles||{}) } };
+    newConfig.styles[key] = ev.target.value;
+    this._dispatchConfigChanged(newConfig);
+  }
+
   _toggleColors(){ this._showColors = !this._showColors; }
 
   _dispatchConfigChanged(config) {
@@ -240,6 +252,29 @@ class HaNavigationCardEditor extends LitElementBase {
           ></ha-textfield>
           <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
             Optional heading displayed at the top of the card, above all sections.
+          </div>
+        </div>
+
+        <!-- Global Styles Customization -->
+        <div class="global-styles">
+          <h4 style="margin: 0 0 12px 0; color: var(--primary-text-color);">Card Styles</h4>
+          <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-bottom:12px;">
+            Customize the appearance and layout of the card.
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; color: var(--primary-text-color); font-weight: 500;">Alignment</label>
+            <select 
+              style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-size: 14px;"
+              .value="${(this._config.styles && this._config.styles.alignment) || (this._config.colors && this._config.colors.alignment) || 'center'}"
+              @change="${(e)=>this._styleChanged(e,'alignment')}"
+            >
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+            <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
+              Align section titles and navigation items
+            </div>
           </div>
         </div>
 
@@ -508,6 +543,13 @@ class HaNavigationCardEditor extends LitElementBase {
     margin-bottom: 16px;
     background: var(--card-background-color, transparent);
   }
+  .global-styles {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: var(--card-background-color, transparent);
+  }
   .global-colors {
     border: 1px solid var(--divider-color);
     border-radius: 8px;
@@ -602,7 +644,8 @@ class HaNavigationCard extends LitElementBase {
           ]
         }
       ],
-      colors: { ...DEFAULT_COLORS }
+      colors: { ...DEFAULT_COLORS },
+      styles: { ...DEFAULT_STYLES }
     };
   }
 
@@ -611,6 +654,14 @@ class HaNavigationCard extends LitElementBase {
       ...DEFAULT_COLORS,
       ...(this.config.colors || {}),
     };
+
+    const styles = {
+      ...DEFAULT_STYLES,
+      ...(this.config.styles || {}),
+    };
+
+    // Support backward compatibility: check styles.alignment first, then colors.alignment
+    const alignment = styles.alignment || colors.alignment || 'center';
 
     // Apply CSS variables via inline style for dynamic color support
     const styleVars = `
@@ -624,7 +675,7 @@ class HaNavigationCard extends LitElementBase {
     `;
 
     return html`
-      <div class="dock-container" role="navigation" aria-label="Home shortcuts" style="${styleVars}">
+      <div class="dock-container" data-alignment="${alignment}" role="navigation" aria-label="Home shortcuts" style="${styleVars}">
         ${this.config.sections.map(section => this._renderSection(section))}
       </div>
     `;
@@ -764,18 +815,43 @@ class HaNavigationCard extends LitElementBase {
         font-weight: bold;
         min-width: 150px;
         width: fit-content;
+        color: var(--nav-text-color);
+      }
+      /* Alignment for center */
+      .dock-container[data-alignment="center"] .dock-section h3 {
         text-align: center;
-        display: block;
         margin-left: auto;
         margin-right: auto;
-        color: var(--nav-text-color);
+      }
+      /* Alignment for left */
+      .dock-container[data-alignment="left"] .dock-section h3 {
+        text-align: left;
+        margin-left: 0;
+        margin-right: auto;
+      }
+      /* Alignment for right */
+      .dock-container[data-alignment="right"] .dock-section h3 {
+        text-align: right;
+        margin-left: auto;
+        margin-right: 0;
       }
       .dock {
         display: flex;
         flex-wrap: wrap;
-        justify-content: center;
         gap: 8px;
         padding: 4px 6px;
+      }
+      /* Alignment for center */
+      .dock-container[data-alignment="center"] .dock {
+        justify-content: center;
+      }
+      /* Alignment for left */
+      .dock-container[data-alignment="left"] .dock {
+        justify-content: flex-start;
+      }
+      /* Alignment for right */
+      .dock-container[data-alignment="right"] .dock {
+        justify-content: flex-end;
       }
       .dock-item {
         position: relative;
