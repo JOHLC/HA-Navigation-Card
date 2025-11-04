@@ -64,6 +64,25 @@ sections:
         url: /config/automation/dashboard
 ```
 
+### Left-Aligned Configuration
+
+To align titles and icons to the left instead of center:
+
+```yaml
+type: custom:ha-navigation-card
+sections:
+  - title: Developer Tools
+    items:
+      - label: YAML
+        icon: mdi:code-tags
+        url: /developer-tools/yaml
+      - label: Services
+        icon: mdi:room-service
+        url: /developer-tools/service
+colors:
+  alignment: left
+```
+
 
 ## 🎨 Configuration Options
 
@@ -111,6 +130,7 @@ sections:
 | `text_color` | string | Text color |
 | `settings_icon_color` | string | Color of settings icon |
 | `settings_icon_size` | string | Size of settings icon (e.g., `24px`) |
+| `alignment` | string | Alignment of titles and items: `left`, `center` (default), or `right` |
 
 ## 🎯 Usage Tips
 
