@@ -399,6 +399,22 @@ class HaNavigationCardEditor extends LitElementBase {
                   placeholder="e.g. /config/dashboard or https://..."
                   @input="${(e) => this._itemChanged(e, index, 'url')}"
                 ></ha-textfield>
+                <div style="margin-bottom: 8px;">
+                  <label style="display: block; margin-bottom: 4px; color: var(--primary-text-color); font-size: 12px; font-weight: 500;">Target</label>
+                  <select 
+                    style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-size: 14px;"
+                    .value="${item.target || '_self'}"
+                    @change="${(e) => this._itemChanged(e, index, 'target')}"
+                  >
+                    <option value="_self">Same window/tab (_self)</option>
+                    <option value="_blank">New tab (_blank)</option>
+                    <option value="_parent">Parent frame (_parent)</option>
+                    <option value="_top">Top frame (_top)</option>
+                  </select>
+                  <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
+                    Where to open the link when clicked
+                  </div>
+                </div>
                 <ha-icon-picker
                   label="Icon (mdi or custom)"
                   .value="${item.icon || ''}"
@@ -434,6 +450,22 @@ class HaNavigationCardEditor extends LitElementBase {
                       .value="${item.settings.icon || 'mdi:cog-outline'}"
                       @value-changed="${(e)=>this._settingsFieldChanged(e,index,'icon')}"
                     ></ha-icon-picker>
+                    <div style="margin-bottom: 8px;">
+                      <label style="display: block; margin-bottom: 4px; color: var(--primary-text-color); font-size: 12px; font-weight: 500;">Settings Target</label>
+                      <select 
+                        style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--divider-color); background: var(--card-background-color); color: var(--primary-text-color); font-size: 14px;"
+                        .value="${item.settings.target || '_self'}"
+                        @change="${(e)=>this._settingsFieldChanged(e,index,'target')}"
+                      >
+                        <option value="_self">Same window/tab (_self)</option>
+                        <option value="_blank">New tab (_blank)</option>
+                        <option value="_parent">Parent frame (_parent)</option>
+                        <option value="_top">Top frame (_top)</option>
+                      </select>
+                      <div style="color:var(--secondary-text-color,#888);font-size:0.9em;margin-top:4px;">
+                        Where to open the settings link when clicked
+                      </div>
+                    </div>
                   </div>
                 `: ''}
               </div>
@@ -641,6 +673,12 @@ class HaNavigationCard extends LitElementBase {
                 icon: "mdi:cog-outline"
               }
             },
+            {
+              label: "External Link",
+              icon: "mdi:open-in-new",
+              url: "https://www.home-assistant.io",
+              target: "_blank"
+            }
           ]
         }
       ],
@@ -704,20 +742,24 @@ class HaNavigationCard extends LitElementBase {
         title="${safe.settings.label || 'Settings'}"
         role="button"
         tabindex="0"
-        @click="${(e) => this._handleSettingsClick(e, safe.settings.url)}"
-        @keydown="${(e) => e.key === 'Enter' && this._handleSettingsClick(e, safe.settings.url)}"
+        @click="${(e) => this._handleSettingsClick(e, safe.settings.url, safe.settings.target)}"
+        @keydown="${(e) => e.key === 'Enter' && this._handleSettingsClick(e, safe.settings.url, safe.settings.target)}"
       >
         <ha-icon icon="${safe.settings.icon || 'mdi:cog-outline'}"></ha-icon>
       </span>
     ` : '';
 
+    // Determine target attribute - default to _self for backwards compatibility
+    const target = safe.target || '_self';
+
     return html`
       <a
         class="dock-item"
         href="${safe.url}"
+        target="${target}"
         title="${safe.label}"
         aria-label="${safe.label}"
-        @click="${(e) => this._onItemClick(e, safe.url)}"
+        @click="${(e) => this._onItemClick(e, safe.url, target)}"
       >
         ${icon}
         <span class="label">${safe.label}</span>
@@ -726,22 +768,33 @@ class HaNavigationCard extends LitElementBase {
     `;
   }
 
-  _handleSettingsClick(e, url) {
+  _handleSettingsClick(e, url, target) {
     e.stopPropagation();
     e.preventDefault();
-    this._navigate(url);
+    this._navigate(url, target);
   }
 
-  _onItemClick(e, url) {
+  _onItemClick(e, url, target) {
+    // For _blank or other targets, let the browser handle it naturally
+    if (target && target !== '_self') {
+      return; // Allow default browser behavior for new tab/window
+    }
+    
     // Internal navigation (paths beginning with /) uses HA router without full reload.
     if (url && url.startsWith('/')) {
       e.preventDefault();
-      this._navigate(url);
+      this._navigate(url, target);
     }
   }
 
-  _navigate(url) {
+  _navigate(url, target) {
     if (!url || url === '#') return;
+    
+    // If target is _blank, open in new tab
+    if (target === '_blank') {
+      window.open(url, '_blank');
+      return;
+    }
     
     try {
       // Normalize URL - remove origin if present to get path

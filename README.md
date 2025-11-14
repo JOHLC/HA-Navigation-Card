@@ -64,6 +64,31 @@ sections:
         url: /config/automation/dashboard
 ```
 
+### Opening Links in New Tab
+
+To open links in a new tab instead of the current page, use the `target` option:
+
+```yaml
+type: custom:ha-navigation-card
+sections:
+  - title: External Links
+    items:
+      - label: Home Assistant
+        icon: mdi:home-assistant
+        url: https://www.home-assistant.io
+        target: _blank
+      - label: Community
+        icon: mdi:forum
+        url: https://community.home-assistant.io
+        target: _blank
+  - title: Internal Links
+    items:
+      - label: Dashboard
+        icon: mdi:view-dashboard
+        url: /lovelace/0
+        # target: _self (default - opens in same window)
+```
+
 ### Left-Aligned Configuration
 
 To align titles and icons to the left instead of center:
@@ -110,6 +135,7 @@ styles:
 | `url` | string | Navigation URL (internal or external) |
 | `icon` | string | MDI icon name (e.g., `mdi:home`) |
 | `image` | string | Image URL (overrides icon if provided) |
+| `target` | string | Where to open the link: `_self` (default), `_blank`, `_parent`, or `_top` |
 | `settings` | object | Optional settings link overlay |
 
 ### Settings Options
@@ -119,6 +145,7 @@ styles:
 | `label` | string | Tooltip text for settings icon |
 | `url` | string | Settings page URL |
 | `icon` | string | Icon for the settings button |
+| `target` | string | Where to open the settings link: `_self` (default), `_blank`, `_parent`, or `_top` |
 
 ### Style Options
 
