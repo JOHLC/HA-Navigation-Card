@@ -10,7 +10,7 @@ const path = require('path');
 const CARD_FILE = path.join(__dirname, '..', 'dist', 'ha-navigation-card.js');
 
 console.log('🧪 Testing Multiple Card Loads\n');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 // Create a mock DOM environment
 class MockCustomElementRegistry {
