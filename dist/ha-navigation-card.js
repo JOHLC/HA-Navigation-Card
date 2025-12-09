@@ -622,7 +622,9 @@ class HaNavigationCardEditor extends LitElementBase {
     `;
   }
 }
-customElements.define("ha-navigation-card-editor", HaNavigationCardEditor);
+if (!customElements.get("ha-navigation-card-editor")) {
+  customElements.define("ha-navigation-card-editor", HaNavigationCardEditor);
+}
 
 class HaNavigationCard extends LitElementBase {
   static get properties() {
@@ -1028,7 +1030,9 @@ class HaNavigationCard extends LitElementBase {
   }
 }
 
-customElements.define("ha-navigation-card", HaNavigationCard);
+if (!customElements.get("ha-navigation-card")) {
+  customElements.define("ha-navigation-card", HaNavigationCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
